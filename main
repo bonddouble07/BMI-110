@@ -21,7 +21,7 @@ class Menu:
                     elif self.main_menu == 2:
                         print("Doctor Portal selected. ")
                         e = Doctor()
-                        e.doctor_menu()
+                        e.doctor_login()
                         break
                     elif self.main_menu == 3:
                         print("Exiting Program ")
@@ -53,6 +53,7 @@ class Doctor(Person):
         self.tests = tests
         self.total = 0
     def doctor_login(self): 
+        w = Doctor()
         print("Hello! Before going any further, provide"
               " your Doctor login please. ")
         while True:
@@ -65,7 +66,7 @@ class Doctor(Person):
                         doctor_input = int(input("What is your password? "))
                         if doctor_input == default_doctor_password:
                             print("Welcome default doctor\n")
-                            break
+                            w.doctor_menu()
                         else:
                             print("Wrong password")
                     else:
@@ -90,17 +91,16 @@ class Doctor(Person):
         self.admit_date = input("Admit date: ")
         attributes_list.append(self.admit_date)
         self.dictionary_keys[key_id] = attributes_list
-        for key, value in self.dictionary_keys.items():
-            print(key, value)
 
     def database(self):
         for key,value in self.dictionary_keys.items():
             print(key,value)
-    def fetch_database(self,key):
+            
+    def fetch_database_value(self,key):
         return self.dictionary_keys[key]
     
     def lab_tests(self):
-        self.test = {'ABG': 500 , 'LFT': 400, 'COAGULATION': 600, 'CBC': 200, 'TSH': 100, 'CHOLESTEROL': 200}
+        self.test = {'ABG': 500 , 'LFT': 400.2, 'COAGULATION': 600, 'CBC': 200, 'TSH': 100, 'CHOLESTEROL': 200}
         for key,value in self.test.items():
             print(key,value)
             
@@ -112,41 +112,45 @@ class Doctor(Person):
     
     def test_cost(self):
         w = sum(self.tests.values())
-        #for key in self.tests:
-        print(f'The tests ordered are {self.tests} and the sum of tests ordered are ${w}')
-            #print("The tests ordered are: {} ".format(key),end = "")
+        print('\n'.join("{}: ${}".format(k,v) for k,v in self.tests.items()))
+        print(f'The sum of tests ordered are ${w}')
+        self.dictionary_keys.update(self.tests)
+        
+        
     def lab_tests_request(self):
         q = Doctor()
         q.database()
         doctor_request = input('Select the patient ID for the patient you wish to request tests: ')
-        request = q.fetch_database(doctor_request)
+        request = q.fetch_database_value(doctor_request)
         print(request)
         q.lab_tests()
         while True:  
-            try:                
-                request_number = int(input("How many tests to request? "))
-                for test in range(request_number):
-                    test_request = input('Which test to request? ').upper()
-                    test = q.fetch_lab_tests(test_request)
-                    test_cost = q.fetch_lab_costs()
-                    if test in test_cost: 
-                        self.cost = test
-                        self.tests[test_request] = self.cost
-                    else:
-                        print("Test not found")
-                q.test_cost()
-                user_input = input("Back to Doctor Menu? ")
-                if user_input == "y" or user_input == "Y":
-                    q.doctor_menu()
-                while user_input != 'y' and user_input != 'Y':
-                    user_input = input("That's not a valid choice. (Y)es or (N)o? ")
-                    if user_input == "n" or user_input == "N":
-                        sys.exit()
+            try:
+                self.tests.clear()
+                if doctor_request in self.dictionary_keys.keys():
+                    request_number = int(input("How many tests to request? "))
+                    for test in range(request_number):
+                        test_request = input('Which test to request? ').upper()
+                        test = q.fetch_lab_tests(test_request)
+                        test_cost = q.fetch_lab_costs()
+                        if test in test_cost: 
+                            self.cost = test
+                            self.tests[test_request] = self.cost
+                        else:
+                            print("Test not found")
+                    q.test_cost()
+                    user_input = input("Back to Doctor Menu? ")
+                    if user_input == "y" or user_input == "Y":
+                        q.doctor_menu()
+                    while user_input != 'y' and user_input != 'Y':
+                        user_input = input("That's not a valid choice. (Y)es or (N)o? ")
+                        if user_input == "n" or user_input == "N":
+                            sys.exit()
             except ValueError:
                 print("Try again")
     def doctor_menu(self):
         w = Doctor()
-        w.doctor_login()
+        #w.doctor_login()
         main_menu = Menu()
         while True:
             try:
@@ -161,6 +165,7 @@ class Doctor(Person):
                         key_add = int(input("How many patients to add? "))
                         for patient in range(key_add):
                             w.database_addition()
+                            w.database()
                         back_to_patient_menu = input('Back to patient menu? ')
                         if back_to_patient_menu == "n" or back_to_patient_menu == "N":
                             break
@@ -195,11 +200,11 @@ class Patient(Doctor):
 
     def patient_names(self):
         w = Doctor()
-        count = 0
-        counts = 0
         main_menu = Menu()
         doctor = Doctor()
         while True:
+            count = 0
+            counts = 0
             try:
                 patient_welcome = int(input("If you're a patient and would like to see your profile, press 1.\n"
                                             "To go back to the main menu, press 0. Please select: "))
@@ -210,7 +215,7 @@ class Patient(Doctor):
                         patient_id = input("What is your unique patient ID? ")
                         patient_first_name = input("What is your first name? ")
                         patient_last_name = input("What is your last name? ")
-                        result = doctor.fetch_database(patient_id)
+                        result = doctor.fetch_database_value(patient_id)
                         if patient_id and patient_first_name in result:
                             if patient_last_name in result:
                                 for c in patient_first_name:
@@ -221,7 +226,8 @@ class Patient(Doctor):
                                         counts += 1
                                 s = '*'
                                 print(f'Hello {patient_first_name[0] :{s}<{count}}' + f'{patient_last_name[0] :{s}<{counts}}')
-                                w.test_cost()
+                                #w.test_cost()
+                                w.database()
                             else:
                                 print("Not in database. ")
                         else:
